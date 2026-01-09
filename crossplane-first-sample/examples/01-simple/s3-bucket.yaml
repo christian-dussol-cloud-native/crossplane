@@ -8,7 +8,7 @@ metadata:
   annotations:
     # The external-name must be globally unique across all AWS accounts
     # Change this to something unique to you
-    crossplane.io/external-name: crossplane-tutorial-${USER}-12345
+    crossplane.io/external-name: crossplane-tutorial-bucket-12345
 spec:
   forProvider:
     region: eu-west-1

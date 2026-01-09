@@ -36,4 +36,3 @@ Senior Engineering Manager @ Finastra
 ---
 
 **Part of CNCF Project Focus series** - Episode #2: Crossplane
-

@@ -4,7 +4,7 @@
 
 set -e
 
-echo "🚀 Installing Crossplane..."
+echo "Installing Crossplane..."
 
 # Configuration
 CROSSPLANE_VERSION="1.14.5"

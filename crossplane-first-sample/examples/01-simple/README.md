@@ -4,7 +4,7 @@ Basic Crossplane managed resources to get started.
 
 ## Prerequisites
 
-- Kubernetes cluster running
+- Kubernetes cluster running (recommended withMinikube: `./scripts/setup-cluster.sh`)
 - Crossplane installed (`./scripts/install-crossplane.sh`)
 - AWS provider configured (`./scripts/configure-aws.sh`)
 
@@ -37,12 +37,13 @@ NAME                          READY   SYNCED   EXTERNAL-NAME                    
 my-first-crossplane-bucket    True    True     crossplane-tutorial-USER-12345   2m
 ```
 
-### Verify in AWS
-
-You can verify the bucket was created in your AWS account:
+# Verifification
 ```bash
-aws s3 ls | grep crossplane-tutorial
+kubectl describe bucket my-first-crossplane-bucket | grep -A 5 "At Provider"
 ```
+
+You can also verity in your AWS web console https://console.aws.amazon.com/ with a search "S3"
+
 
 ### Delete
 
@@ -55,11 +56,8 @@ The bucket will be deleted from AWS as well.
 ## What You're Learning
 
 **Managed Resources**: Crossplane creates and manages the cloud resource directly.
-
 **Declarative**: You declare what you want, Crossplane ensures it exists.
-
 **Kubernetes-native**: Uses kubectl and standard Kubernetes patterns.
-
 **Status Conditions**: 
 - `READY` - Resource is fully provisioned
 - `SYNCED` - Crossplane is actively managing it

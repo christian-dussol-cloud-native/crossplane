@@ -14,7 +14,7 @@ metadata:
       Production databases must have automated backups enabled
       to ensure business continuity and disaster recovery.
 spec:
-  validationFailureAction: enforce
+  validationFailureAction: Enforce
   background: true
   rules:
   - name: require-backup-for-production

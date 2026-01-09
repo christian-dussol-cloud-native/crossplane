@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Setting up minikube cluster for Crossplane..."
+echo "Setting up minikube cluster for Crossplane..."
 
 CLUSTER_NAME="crossplane-demo"
 MEMORY="4096"
@@ -46,7 +46,7 @@ echo -e "${YELLOW}Waiting for cluster to be ready...${NC}"
 kubectl wait --for=condition=ready node --all --timeout=300s
 
 echo ""
-echo -e "${GREEN}✅ Minikube cluster created successfully!${NC}"
+echo -e "${GREEN}Minikube cluster created successfully!${NC}"
 echo ""
 kubectl get nodes
 echo ""

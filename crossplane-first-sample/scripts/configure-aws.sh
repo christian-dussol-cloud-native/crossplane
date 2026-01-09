@@ -1,10 +1,7 @@
 #!/bin/bash
-# scripts/configure-aws.sh
-# Simple AWS provider configuration for Crossplane
-
 set -e
 
-echo "🔧 Configuring AWS Provider for Crossplane..."
+echo "🔧 Configuring AWS Providers for Crossplane..."
 echo ""
 
 # Colors
@@ -13,14 +10,8 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# Check Crossplane is installed
-if ! kubectl get namespace crossplane-system &> /dev/null; then
-    echo -e "${RED}Crossplane not found. Please run ./scripts/install-crossplane.sh first.${NC}"
-    exit 1
-fi
-
-# Get AWS credentials
-echo "Enter your AWS credentials:"
+# Prompt for credentials
+echo -e "${YELLOW}Enter your AWS credentials:${NC}"
 read -p "AWS Access Key ID: " AWS_KEY_ID
 read -sp "AWS Secret Access Key: " AWS_SECRET_KEY
 echo ""
@@ -36,27 +27,60 @@ aws_secret_access_key = ${AWS_SECRET_KEY}" \
   --dry-run=client -o yaml | kubectl apply -f -
 
 echo -e "${GREEN}✓ Secret created${NC}"
+echo ""
 
 # Install AWS S3 provider
-echo -e "${YELLOW}Installing AWS S3 provider...${NC}"
-kubectl apply -f - <<EOF
+echo -e "${YELLOW}Installing AWS S3 provider (for simple examples)...${NC}"
+kubectl apply -f - <<YAML
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: provider-aws-s3
 spec:
   package: xpkg.upbound.io/upbound/provider-aws-s3:v1.1.0
-EOF
+YAML
 
-echo -e "${YELLOW}Waiting for provider to be ready (this may take 1-2 minutes)...${NC}"
-sleep 10
+echo -e "${GREEN}✓ S3 provider installation started${NC}"
+echo ""
+
+# Install AWS RDS provider
+echo -e "${YELLOW}Installing AWS RDS provider (for database examples)...${NC}"
+kubectl apply -f - <<YAML
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-aws-rds
+spec:
+  package: xpkg.upbound.io/upbound/provider-aws-rds:v1.1.0
+YAML
+
+echo -e "${GREEN}✓ RDS provider installation started${NC}"
+echo ""
+
+# Wait for providers to be healthy
+echo -e "${YELLOW}⏳ Waiting for providers to be ready (this may take 3-5 minutes)...${NC}"
+echo "   - Downloading provider packages"
+echo "   - Installing CRDs (Custom Resource Definitions)"
+echo "   - Starting provider controllers"
+echo ""
+
 kubectl wait --for=condition=healthy provider/provider-aws-s3 --timeout=300s
+echo -e "${GREEN}✓ S3 provider is healthy${NC}"
 
-echo -e "${GREEN}✓ Provider installed${NC}"
+kubectl wait --for=condition=healthy provider/provider-aws-rds --timeout=300s
+echo -e "${GREEN}✓ RDS provider is healthy${NC}"
+echo ""
 
-# Create ProviderConfig
-echo -e "${YELLOW}Creating ProviderConfig...${NC}"
-kubectl apply -f - <<EOF
+# Wait for CRDs to be fully registered (critical!)
+echo -e "${YELLOW}⏳ Waiting for CRDs to be registered (60 seconds)...${NC}"
+echo "   This ensures all Custom Resource Definitions are available"
+sleep 60
+echo -e "${GREEN}✓ CRDs registered${NC}"
+echo ""
+
+# Create ProviderConfig for AWS (works for S3, RDS, and all AWS services)
+echo -e "${YELLOW}Configuring AWS providers...${NC}"
+kubectl apply -f - <<YAML
 apiVersion: aws.upbound.io/v1beta1
 kind: ProviderConfig
 metadata:
@@ -68,13 +92,24 @@ spec:
       namespace: crossplane-system
       name: aws-credentials
       key: credentials
-EOF
+YAML
 
-echo -e "${GREEN}✓ ProviderConfig created${NC}"
+echo -e "${GREEN}✓ AWS providers configured${NC}"
 echo ""
-echo -e "${GREEN}✅ AWS provider configured successfully!${NC}"
+
+# Verification
+echo -e "${GREEN}✅ AWS providers configured successfully!${NC}"
 echo ""
-echo "Test it with:"
-echo "  kubectl apply -f examples/01-simple/s3-bucket.yaml"
-echo "  kubectl get bucket"
+echo "Installed providers:"
+kubectl get providers | grep -E "NAME|provider-aws"
 echo ""
+echo "Next steps:"
+echo "  📦 Simple example (S3):    kubectl apply -f examples/01-simple/s3-bucket.yaml"
+echo "  🗄️  Database example (RDS): kubectl apply -f examples/02-database/claim.yaml"
+echo "  🛡️  Governance (Kyverno):   kubectl apply -f examples/03-governance/"
+echo ""
+echo "Verify everything is working:"
+echo "  kubectl get providers"
+echo "  kubectl get providerconfigs"
+echo ""
+echo "🎉 Ready to create cloud resources with Crossplane!"

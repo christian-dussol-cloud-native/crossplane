@@ -1,20 +1,25 @@
-# Multi-Cloud Database Composition
+# Multi-Cloud database composition
 
-Learn to create custom APIs that work across AWS, Azure, and GCP.
+Learn to create custom APIs that work across AWS, Azure and GCP.
 
-## What's This About?
+## What's this about?
 
 Instead of deploying AWS RDS directly, you create a **platform API** that abstracts the cloud provider details.
 
 Developers just say "I need a medium PostgreSQL database" and it gets deployed to whichever cloud you configure.
 
-## Files in This Directory
+## Files in this directory
 
 - `definition.yaml` - Defines your **DatabaseInstance** API
 - `composition.yaml` - Implements it using AWS RDS
 - `claim.yaml` - Example of how developers use it
 
-## Quick Start
+## Quick start
+
+### 0. Create your database password secret
+```bash
+../../scripts/create-db-password.sh
+```
 
 ### 1. Install the Definition and Composition
 
@@ -29,13 +34,13 @@ kubectl get compositeresourcedefinition
 kubectl get composition
 ```
 
-### 2. Create a Database
+### 2. Create a database
 
 ```bash
 kubectl apply -f claim.yaml
 ```
 
-### 3. Watch It Being Created
+### 3. Watch it being created
 
 ```bash
 # Watch the claim
@@ -45,9 +50,27 @@ kubectl get databaseinstance my-app-database -w
 kubectl describe databaseinstance my-app-database
 ```
 
-It will take 5-10 minutes for AWS to provision the RDS instance.
+## ⏱️ Expected wait time
 
-### 4. Get Connection Details
+Creating a real RDS database takes **5-10 minutes**.
+
+You'll see:
+1. SYNCED=True after ~30 seconds (Crossplane accepted the request)
+2. READY=False for 8-10 minutes (AWS is creating the database)
+3. READY=True when complete (database ready to use!)
+
+This is **normal AWS behavior**, not a Crossplane issue.
+```bash
+# Watch the progress
+kubectl get databaseinstance my-app-database -w
+
+```
+
+**Be patient!** ☕ Grab a coffee while AWS provisions your database.
+
+It will take around 10 minutes for AWS to provision the RDS instance.
+
+### 4. Get connection details
 
 Once `READY` is `True`:
 
@@ -55,12 +78,12 @@ Once `READY` is `True`:
 # View the secret
 kubectl get secret my-app-db-connection -o yaml
 
-# Decode the password
-kubectl get secret my-app-db-connection \
-  -o jsonpath='{.data.password}' | base64 -d
+# Get your database credentials
+../../scripts/get-db-credentials.sh
+
 ```
 
-## The Multi-Cloud Magic
+## The Multi-Cloud magic
 
 **Same DatabaseInstance YAML works on different clouds!**
 
@@ -73,9 +96,9 @@ compositionSelector:
 
 Your application doesn't change. The connection secret format stays the same.
 
-## Using in Your Application
+## Using in your application
 
-### As Environment Variables
+### As environment variables
 
 ```yaml
 apiVersion: v1
@@ -109,7 +132,7 @@ spec:
           key: password
 ```
 
-### As Mounted Files
+### As mounted files
 
 ```yaml
 spec:
@@ -125,19 +148,16 @@ spec:
       secretName: my-app-db-connection
 ```
 
-## What You're Learning
+## What you are learning
 
 **Composition**: Combining multiple cloud resources into a single API.
-
 **Abstraction**: Hiding cloud-specific complexity from developers.
-
 **Portability**: Same API works across AWS, Azure, GCP.
-
 **Self-Service**: Developers provision their own databases without tickets.
 
 ## Customizing
 
-### Change Database Size
+### Change Database size
 
 Edit `claim.yaml`:
 ```yaml
@@ -163,7 +183,7 @@ spec:
     version: "8.0"
 ```
 
-## Cost Optimization
+## Cost optimization
 
 Notice the **required tags** in the definition:
 ```yaml
@@ -181,7 +201,7 @@ These tags enable:
 
 See `examples/03-governance/` to enforce these tags with policies.
 
-## Adding More Cloud Providers
+## Adding more Cloud providers
 
 To add Azure or GCP support:
 
@@ -234,9 +254,7 @@ kubectl get instance -A
 
 **Warning**: Deleting the claim will delete the actual database in AWS.
 
-## Next Steps
+## Next steps
 
 - Add governance policies: `examples/03-governance/`
 - Calculate cost savings: `scripts/cost-calculator.py`
-- Add Azure/GCP compositions
-- Integrate with ArgoCD for GitOps

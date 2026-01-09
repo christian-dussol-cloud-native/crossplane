@@ -1,5 +1,5 @@
 # examples/02-database/composition.yaml
-# AWS Composition - Implements DatabaseInstance using AWS RDS
+# AWS RDS Composition - Simple and reliable version for learning
 
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
@@ -14,22 +14,7 @@ spec:
     apiVersion: platform.example.com/v1alpha1
     kind: XDatabase
   
-  # Size mapping for AWS RDS instance classes
-  patchSets:
-  - name: size-mapping
-    patches:
-    - type: FromCompositeFieldPath
-      fromFieldPath: spec.parameters.size
-      toFieldPath: spec.forProvider.dbInstanceClass
-      transforms:
-      - type: map
-        map:
-          small: db.t3.micro
-          medium: db.t3.medium
-          large: db.r6g.xlarge
-  
   resources:
-  # RDS Instance
   - name: rds-instance
     base:
       apiVersion: rds.aws.upbound.io/v1beta1
@@ -37,71 +22,61 @@ spec:
       spec:
         forProvider:
           region: eu-west-1
+          # Database configuration
+          engine: postgres
+          engineVersion: "15"
+          instanceClass: db.t3.micro
           allocatedStorage: 20
+          # Security settings
           storageEncrypted: true
           storageType: gp3
           publiclyAccessible: false
-          skipFinalSnapshot: true
-          # Default values - will be patched from claim
-          engine: postgres
-          engineVersion: "15"
-          dbInstanceClass: db.t3.micro
-          backupRetentionPeriod: 7
+          skipFinalSnapshot: true  # For learning - set to false in production
+          # Backup and availability (Free Tier compatible)
+          backupRetentionPeriod: 1  # Free Tier max = 1 day
           multiAz: false
-          # Auto-generate password
+          # Credentials (using pre-created secret for password)
           username: dbadmin
-          autoGeneratePassword: true
+          passwordSecretRef:
+            key: password
+            name: rds-database-password
+            namespace: crossplane-system
     
     patches:
-    # Engine type
+    # Patch engine from claim
     - type: FromCompositeFieldPath
       fromFieldPath: spec.parameters.engine
       toFieldPath: spec.forProvider.engine
     
-    # Engine version
-    - type: FromCompositeFieldPath
-      fromFieldPath: spec.parameters.version
-      toFieldPath: spec.forProvider.engineVersion
-    
-    # Instance size (using patchSet)
-    - type: PatchSet
-      patchSetName: size-mapping
-    
-    # High Availability (multi-AZ)
-    - type: FromCompositeFieldPath
-      fromFieldPath: spec.parameters.highAvailability
-      toFieldPath: spec.forProvider.multiAz
-    
-    # Backup retention
-    - type: FromCompositeFieldPath
-      fromFieldPath: spec.parameters.backup
-      toFieldPath: spec.forProvider.backupRetentionPeriod
-      transforms:
-      - type: map
-        map:
-          true: 7    # 7 days retention
-          false: 0   # No backups
-    
-    # Cost allocation tags
+    # Patch tags for cost allocation
     - type: FromCompositeFieldPath
       fromFieldPath: spec.parameters.tags
       toFieldPath: spec.forProvider.tags
+      policy:
+        fromFieldPath: Optional
     
-    # Connection details back to status
+    # Export connection details to status
     - type: ToCompositeFieldPath
       fromFieldPath: status.atProvider.endpoint
       toFieldPath: status.endpoint
+      policy:
+        fromFieldPath: Optional
     
     - type: ToCompositeFieldPath
       fromFieldPath: status.atProvider.port
       toFieldPath: status.port
+      policy:
+        fromFieldPath: Optional
     
+    # Connection secret details
     connectionDetails:
     - name: username
-      fromConnectionSecretKey: username
+      fromFieldPath: spec.forProvider.username
     - name: password
       fromConnectionSecretKey: password
     - name: endpoint
-      fromConnectionSecretKey: endpoint
+      fromFieldPath: status.atProvider.endpoint
     - name: port
-      fromConnectionSecretKey: port
+      fromFieldPath: status.atProvider.port
+    - name: database
+      value: postgres

@@ -2,13 +2,13 @@
 
 Enforce policies on your Crossplane resources automatically.
 
-## What's This About?
+## What's this about?
 
 **Crossplane provisions infrastructure. Kyverno ensures compliance.**
 
 Instead of manual reviews and approval processes, you define policies that are automatically enforced.
 
-## Policies Included
+## Policies included
 
 ### require-tags.yaml
 **Enforces cost allocation tags on all databases.**
@@ -29,8 +29,10 @@ Development and staging databases can skip backups (to save costs).
 
 ### Install Kyverno
 
+Installation Guide: https://kyverno.io/docs/installation/
+
 ```bash
-kubectl create -f https://github.com/kyverno/kyverno/releases/download/v1.11.0/install.yaml
+kubectl create -f https://github.com/kyverno/kyverno/releases/download/v1.13.0/install.yaml
 ```
 
 Wait for Kyverno to be ready:
