@@ -1,0 +1,86 @@
+# examples/03-governance/require-backup.yaml
+# Kyverno Policy: Require Backup for Production Databases
+# Production workloads must have backup enabled
+
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: production-database-backup
+  annotations:
+    policies.kyverno.io/title: Production Database Backup Requirement
+    policies.kyverno.io/category: Business Continuity
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Production databases must have automated backups enabled
+      to ensure business continuity and disaster recovery.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: require-backup-for-production
+    match:
+      any:
+      - resources:
+          kinds:
+          - DatabaseInstance
+    validate:
+      message: "Production databases must have backup enabled"
+      # Only enforces when environment tag is 'production'
+      pattern:
+        spec:
+          parameters:
+            tags:
+              environment: production
+            backup: true
+
+# Usage:
+# 1. Apply this policy:
+#    kubectl apply -f require-backup.yaml
+#
+# 2. Test it - this should be REJECTED (production without backup):
+#    kubectl apply -f - <<EOF
+#    apiVersion: platform.example.com/v1alpha1
+#    kind: DatabaseInstance
+#    metadata:
+#      name: prod-db-no-backup
+#    spec:
+#      parameters:
+#        size: medium
+#        engine: postgres
+#        version: "15"
+#        backup: false  # This will be rejected!
+#        tags:
+#          cost-center: engineering
+#          project: test
+#          environment: production
+#      compositionSelector:
+#        matchLabels:
+#          provider: aws
+#    EOF
+#
+# 3. This should be ACCEPTED (production with backup):
+#    # Change backup: false to backup: true
+#
+# 4. Development databases don't need backups (ACCEPTED):
+#    kubectl apply -f - <<EOF
+#    apiVersion: platform.example.com/v1alpha1
+#    kind: DatabaseInstance
+#    metadata:
+#      name: dev-db
+#    spec:
+#      parameters:
+#        size: small
+#        engine: postgres
+#        version: "15"
+#        backup: false  # OK for development
+#        tags:
+#          cost-center: engineering
+#          project: test
+#          environment: development
+#      compositionSelector:
+#        matchLabels:
+#          provider: aws
+#    EOF
+#
+# 5. Check policy reports:
+#    kubectl describe policyreport -n default

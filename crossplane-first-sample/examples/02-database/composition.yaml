@@ -1,0 +1,107 @@
+# examples/02-database/composition.yaml
+# AWS Composition - Implements DatabaseInstance using AWS RDS
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xdatabase.aws.platform.example.com
+  labels:
+    provider: aws
+    service: rds
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: platform.example.com/v1alpha1
+    kind: XDatabase
+  
+  # Size mapping for AWS RDS instance classes
+  patchSets:
+  - name: size-mapping
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.size
+      toFieldPath: spec.forProvider.dbInstanceClass
+      transforms:
+      - type: map
+        map:
+          small: db.t3.micro
+          medium: db.t3.medium
+          large: db.r6g.xlarge
+  
+  resources:
+  # RDS Instance
+  - name: rds-instance
+    base:
+      apiVersion: rds.aws.upbound.io/v1beta1
+      kind: Instance
+      spec:
+        forProvider:
+          region: eu-west-1
+          allocatedStorage: 20
+          storageEncrypted: true
+          storageType: gp3
+          publiclyAccessible: false
+          skipFinalSnapshot: true
+          # Default values - will be patched from claim
+          engine: postgres
+          engineVersion: "15"
+          dbInstanceClass: db.t3.micro
+          backupRetentionPeriod: 7
+          multiAz: false
+          # Auto-generate password
+          username: dbadmin
+          autoGeneratePassword: true
+    
+    patches:
+    # Engine type
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.engine
+      toFieldPath: spec.forProvider.engine
+    
+    # Engine version
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.version
+      toFieldPath: spec.forProvider.engineVersion
+    
+    # Instance size (using patchSet)
+    - type: PatchSet
+      patchSetName: size-mapping
+    
+    # High Availability (multi-AZ)
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.highAvailability
+      toFieldPath: spec.forProvider.multiAz
+    
+    # Backup retention
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.backup
+      toFieldPath: spec.forProvider.backupRetentionPeriod
+      transforms:
+      - type: map
+        map:
+          true: 7    # 7 days retention
+          false: 0   # No backups
+    
+    # Cost allocation tags
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.tags
+      toFieldPath: spec.forProvider.tags
+    
+    # Connection details back to status
+    - type: ToCompositeFieldPath
+      fromFieldPath: status.atProvider.endpoint
+      toFieldPath: status.endpoint
+    
+    - type: ToCompositeFieldPath
+      fromFieldPath: status.atProvider.port
+      toFieldPath: status.port
+    
+    connectionDetails:
+    - name: username
+      fromConnectionSecretKey: username
+    - name: password
+      fromConnectionSecretKey: password
+    - name: endpoint
+      fromConnectionSecretKey: endpoint
+    - name: port
+      fromConnectionSecretKey: port

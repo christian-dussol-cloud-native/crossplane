@@ -1,0 +1,53 @@
+# examples/02-database/claim.yaml
+# DatabaseInstance Claim - How developers request a database
+
+apiVersion: platform.example.com/v1alpha1
+kind: DatabaseInstance
+metadata:
+  name: my-app-database
+  namespace: default
+spec:
+  parameters:
+    # Simple business-level parameters
+    size: medium
+    engine: postgres
+    version: "15"
+    backup: true
+    highAvailability: false
+    
+    # Required cost allocation tags
+    tags:
+      cost-center: "engineering"
+      project: "learning-crossplane"
+      environment: "development"
+  
+  # Select which cloud provider to use
+  compositionSelector:
+    matchLabels:
+      provider: aws
+  
+  # Connection details will be written to this secret
+  writeConnectionSecretToRef:
+    name: my-app-db-connection
+
+# Usage:
+# 1. Apply the definition and composition first:
+#    kubectl apply -f definition.yaml
+#    kubectl apply -f composition.yaml
+#
+# 2. Apply this claim:
+#    kubectl apply -f claim.yaml
+#
+# 3. Check status:
+#    kubectl get databaseinstance
+#    kubectl describe databaseinstance my-app-database
+#
+# 4. Get connection details:
+#    kubectl get secret my-app-db-connection -o yaml
+#
+# 5. Use in your application:
+#    See README.md for examples
+#
+# To switch clouds, just change the compositionSelector label to:
+#   provider: azure  # or gcp
+# (Requires Azure/GCP compositions to be installed)

@@ -1,0 +1,79 @@
+# examples/02-database/definition.yaml
+# CompositeResourceDefinition (XRD) - Defines your custom DatabaseInstance API
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xdatabases.platform.example.com
+spec:
+  group: platform.example.com
+  names:
+    kind: XDatabase
+    plural: xdatabases
+  claimNames:
+    kind: DatabaseInstance
+    plural: databaseinstances
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              parameters:
+                type: object
+                properties:
+                  # Business-level parameters
+                  size:
+                    type: string
+                    description: "Database size: small, medium, or large"
+                    enum: ["small", "medium", "large"]
+                  engine:
+                    type: string
+                    description: "Database engine"
+                    enum: ["postgres", "mysql"]
+                  version:
+                    type: string
+                    description: "Engine version (e.g., 15 for postgres)"
+                  backup:
+                    type: boolean
+                    description: "Enable automated backups"
+                    default: true
+                  highAvailability:
+                    type: boolean
+                    description: "Enable multi-AZ/zone deployment"
+                    default: false
+                  # Cost allocation tags (required)
+                  tags:
+                    type: object
+                    description: "Cost allocation tags"
+                    properties:
+                      cost-center:
+                        type: string
+                      project:
+                        type: string
+                      environment:
+                        type: string
+                    required:
+                    - cost-center
+                    - project
+                    - environment
+                required:
+                - size
+                - engine
+                - tags
+            required:
+            - parameters
+          status:
+            type: object
+            properties:
+              endpoint:
+                type: string
+              port:
+                type: integer
+              status:
+                type: string

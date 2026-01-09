@@ -1,0 +1,65 @@
+# examples/03-governance/require-tags.yaml
+# Kyverno Policy: Require Cost Allocation Tags
+# Ensures all database instances have proper cost center tags for FinOps
+
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-cost-tags-database
+  annotations:
+    policies.kyverno.io/title: Require Cost Allocation Tags
+    policies.kyverno.io/category: FinOps
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: DatabaseInstance
+    policies.kyverno.io/description: >-
+      All database instances must have cost-center, project, and environment tags
+      for proper cost allocation and chargeback. This is critical for FinOps practices.
+spec:
+  validationFailureAction: enforce  # Change to 'audit' for testing
+  background: true
+  rules:
+  - name: require-cost-tags
+    match:
+      any:
+      - resources:
+          kinds:
+          - DatabaseInstance
+    validate:
+      message: >-
+        Database instance must have cost allocation tags:
+        - cost-center (required)
+        - project (required)  
+        - environment (required: production, staging, or development)
+      pattern:
+        spec:
+          parameters:
+            tags:
+              cost-center: "?*"
+              project: "?*"
+              environment: "production|staging|development"
+
+# Usage:
+# 1. Install Kyverno:
+#    kubectl create -f https://github.com/kyverno/kyverno/releases/download/v1.11.0/install.yaml
+#
+# 2. Apply this policy:
+#    kubectl apply -f require-tags.yaml
+#
+# 3. Test it - this should be REJECTED:
+#    kubectl apply -f - <<EOF
+#    apiVersion: platform.example.com/v1alpha1
+#    kind: DatabaseInstance
+#    metadata:
+#      name: test-db
+#    spec:
+#      parameters:
+#        size: small
+#        engine: postgres
+#        # Missing tags!
+#    EOF
+#
+# 4. This should be ACCEPTED:
+#    kubectl apply -f ../02-database/claim.yaml
+#
+# 5. View policy reports:
+#    kubectl get policyreport -A

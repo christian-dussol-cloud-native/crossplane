@@ -1,0 +1,26 @@
+# examples/01-simple/s3-bucket.yaml
+# Simple S3 bucket example - your first Crossplane resource
+
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: Bucket
+metadata:
+  name: my-first-crossplane-bucket
+  annotations:
+    # The external-name must be globally unique across all AWS accounts
+    # Change this to something unique to you
+    crossplane.io/external-name: crossplane-tutorial-${USER}-12345
+spec:
+  forProvider:
+    region: eu-west-1
+    tags:
+      managed-by: crossplane
+      tutorial: getting-started
+      environment: learning
+      cost-center: engineering
+
+# Usage:
+# 1. Make sure AWS provider is configured: ./scripts/configure-aws.sh
+# 2. Apply this file: kubectl apply -f examples/01-simple/s3-bucket.yaml
+# 3. Check status: kubectl get bucket
+# 4. Describe details: kubectl describe bucket my-first-crossplane-bucket
+# 5. Delete: kubectl delete -f examples/01-simple/s3-bucket.yaml
