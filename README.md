@@ -23,8 +23,8 @@ Modules will be added progressively as part of the CNCF Project Focus series.
 
 This repository provides **learning materials and reference implementations**. Always review and adapt code to your specific requirements before using in production.
 
-# Medium related articles
-[From Terraform to Crossplane: Exploring Multi-Cloud infrastructure management]([https://medium.com/@christian.dussol](https://medium.com/@christian.dussol/from-terraform-to-crossplane-exploring-multi-cloud-infrastructure-management-7dd65f3a81c7))
+### Medium related articles
+[From Terraform to Crossplane: Exploring Multi-Cloud infrastructure management](https://medium.com/@christian.dussol/from-terraform-to-crossplane-exploring-multi-cloud-infrastructure-management-7dd65f3a81c7)
 
 ## License
 This repository is licensed under Creative Commons Attribution-ShareAlike 4.0 International License.
