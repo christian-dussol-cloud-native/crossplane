@@ -299,9 +299,6 @@ Optional but recommended:
 - [CNCF Crossplane](https://www.cncf.io/projects/crossplane/)
 - [Kyverno Docs](https://kyverno.io/)
 
-### Related Articles
-- Episode #1: [Knative - Serverless on Kubernetes](https://github.com/christian-dussol-cloud-native/knative/tree/main)
-
 ---
 
 ## 📝 License
@@ -313,7 +310,8 @@ This repository is licensed under Creative Commons Attribution-ShareAlike 4.0 In
 
 ## 📌 Related Projects in "CNCF Project Focus" Series
 
-This is **#2 in the series**. Future projects will explore other CNCF graduated projects.
+- Episode #1: [Knative - Serverless on Kubernetes](https://github.com/christian-dussol-cloud-native/knative/tree/main)
+- This is **#2 in the series Crossplane**: Universal control plane for multi-cloud infrastructure.
 
 ---
 
