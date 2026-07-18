@@ -33,7 +33,7 @@ This repository is licensed under Creative Commons Attribution-ShareAlike 4.0 In
 
 ## 👤 Author
 
-**Christian Dussol**  
+[Christian Dussol](https://www.linkedin.com/in/christiandussol/)
 
 ---
 
